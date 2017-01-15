@@ -30,5 +30,5 @@ Example:
 Probably we should randomize the strings inside "command" and "args" between successive requests.
 
 ## TODO
-- [ ] Telnet service
+- [x] Telnet service
 - [ ] JSON client
