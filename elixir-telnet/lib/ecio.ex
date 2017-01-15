@@ -38,7 +38,11 @@ defmodule Ecio.Server do
     try do
       case read_line client do
         {:ok, line} ->
-          Ecio.Logger.log "got line \"#{String.trim line}\""
+          # sleep between 500ms and 1sec
+          timeout = 500 + :rand.uniform(500)
+          Ecio.Logger.log "got line \"#{String.trim line}\" sleeping for #{timeout}ms"
+
+          Process.sleep timeout
 
           String.upcase(line) |> write_line(client)
           handle_client client
@@ -62,6 +66,7 @@ end
 
 defmodule Ecio.Logger do
   def log(msg) do
-    IO.puts "#{Kernel.inspect self()}: #{msg}"
+    # Elixir does not have a DateTime library that supports timezones...
+    IO.puts "#{DateTime.utc_now} #{Kernel.inspect self()}: #{msg}"
   end
 end
