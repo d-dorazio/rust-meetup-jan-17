@@ -1,18 +1,16 @@
-defmodule Ecio.Logger do
-  def log(msg) do
-    IO.puts "#{Kernel.inspect self()}: #{msg}"
-  end
-end
+defmodule Ecio do
+  use Application
 
-defmodule Ecio.Server do
-  def start_supervisioned(port) do
+  def start(_type, _args) do
     children = [
-      Supervisor.Spec.worker(__MODULE__, [port])
+      Supervisor.Spec.worker(Ecio.Server, [4273])
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one)
   end
+end
 
+defmodule Ecio.Server do
   def start_link(port, _opts \\ []) do
     {:ok, spawn_link(__MODULE__, :serve, [port])}
   end
@@ -59,5 +57,11 @@ defmodule Ecio.Server do
 
   defp write_line(line, socket) do
     :ok = :gen_tcp.send(socket, line)
+  end
+end
+
+defmodule Ecio.Logger do
+  def log(msg) do
+    IO.puts "#{Kernel.inspect self()}: #{msg}"
   end
 end
