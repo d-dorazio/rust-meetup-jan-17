@@ -3,7 +3,7 @@ defmodule Ecio do
 
   def start(_type, _args) do
     children = [
-      Supervisor.Spec.worker(Ecio.Server, [4273])
+      Supervisor.Spec.worker(Ecio.Server, [Application.get_env(:ecio, :port)])
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one)
