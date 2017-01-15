@@ -1,23 +1,27 @@
-defmodule Ecio do
+defmodule Ecio.Logger do
+  def log(msg) do
+    IO.puts "#{Kernel.inspect self()}: #{msg}"
+  end
+end
+
+defmodule Ecio.Server do
   def start_supervisioned(port) do
     children = [
-      Supervisor.Spec.worker(Ecio, [port], [name: Foo])
+      Supervisor.Spec.worker(__MODULE__, [port])
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one)
   end
 
-  def start_link(port, opts \\ []) do
-    IO.puts "#{port}"
-    spawn(Ecio, :serve, [port])
+  def start_link(port, _opts \\ []) do
+    {:ok, spawn_link(__MODULE__, :serve, [port])}
   end
 
   def serve(port) do
-    IO.puts "serve"
+    Ecio.Logger.log "listening on port: #{port}"
     {:ok, socket} = :gen_tcp.listen(port, [:binary, packet: :line, active: false, reuseaddr: true])
 
     try do
-      IO.puts "ready"
       accept(socket)
     after
       :gen_tcp.close(socket)
@@ -26,10 +30,9 @@ defmodule Ecio do
 
   def accept(socket) do
     {:ok, client} = :gen_tcp.accept(socket)
+    Ecio.Logger.log "client accepted"
 
-    IO.puts "Accepted"
-
-    spawn(Ecio, :handle_client, [client])
+    spawn(__MODULE__, :handle_client, [client])
     accept(socket)
   end
 
@@ -37,8 +40,12 @@ defmodule Ecio do
     try do
       case read_line client do
         {:ok, line} ->
+          Ecio.Logger.log "got line \"#{String.trim line}\""
+
           String.upcase(line) |> write_line(client)
           handle_client client
+        {:error, :closed} ->
+          Ecio.Logger.log "connection closed"
         _ -> ()
       end
     after
